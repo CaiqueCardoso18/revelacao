@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>revelação — organizador de rostos</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="wordmark">revela<span class="dot">·</span>ção</div>
+
+    <div style="position:relative;">
+      <button class="event-switch" id="event-switch" type="button" aria-haspopup="true" aria-expanded="false">
+        <span class="ev-dot" id="event-switch-dot"></span>
+        <span class="ev-name" id="event-switch-name">Nenhum evento ainda</span>
+        <svg class="caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="event-menu" id="event-menu"></div>
+    </div>
+
+    <div class="topbar-path" id="topbar-path"></div>
+
+    <div class="topbar-stats">
+      <div class="stat"><b id="stat-fotos">0</b><span>fotos</span></div>
+      <div class="stat"><b id="stat-rostos">0</b><span>rostos</span></div>
+      <div class="stat"><b id="stat-pessoas">0</b><span>pessoas</span></div>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="side-section">
+      <div class="side-label">Biblioteca</div>
+      <button class="folder-btn" id="btn-rescan" type="button">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+        <span id="btn-rescan-label">Reprocessar pasta</span>
+      </button>
+    </div>
+
+    <div class="side-section">
+      <div class="side-label">Processamento local</div>
+      <div class="proc-card">
+        <div class="proc-head">
+          <span class="proc-title" id="proc-title">—</span>
+          <span class="proc-count" id="proc-count">0 / 0</span>
+        </div>
+        <div class="proc-bar"><div class="proc-bar-fill" id="proc-bar-fill"></div></div>
+        <div class="proc-meta">
+          <span id="proc-meta-left"></span>
+          <span id="proc-meta-right"></span>
+        </div>
+        <div class="proc-note" id="proc-note">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+          <span id="proc-note-text">Processando nesta máquina — nenhuma foto sai da pasta</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <div class="empty-state" id="empty-state">
+      <p class="empty-title">Nenhum evento ainda</p>
+      <p class="empty-sub">Adicione a pasta de fotos de um evento (casamento, formatura, espetáculo...) para começar.</p>
+      <button class="btn-primary" id="btn-empty-add" type="button">Adicionar evento</button>
+    </div>
+
+    <div id="event-content" style="display:none;">
+      <div class="section-head">
+        <span class="section-title">Identificados</span>
+        <span class="section-rule"></span>
+        <span class="section-count" id="count-identified">0 pessoas</span>
+      </div>
+      <div class="grid" id="grid-identified"></div>
+
+      <div class="section-head" id="section-head-review">
+        <span class="section-title">Revisar sugestão de mesclagem</span>
+        <span class="section-rule"></span>
+        <span class="section-count" id="count-review">0 pares</span>
+      </div>
+      <div class="section-hint" id="section-hint-review">A IA achou dois grupos parecidos — pode ser a mesma pessoa em ângulos ou luzes diferentes.</div>
+      <div class="grid" id="grid-review"></div>
+
+      <div class="section-head" id="section-head-unidentified">
+        <span class="section-title">Não identificados</span>
+        <span class="section-rule"></span>
+        <span class="section-count" id="count-unidentified">0 rostos</span>
+      </div>
+      <div class="section-hint">Rostos borrados, de perfil ou muito pequenos para agrupar com confiança.</div>
+      <div class="grid" id="grid-unidentified"></div>
+
+      <div class="footer-bar">
+        <div class="footer-text" id="footer-text"></div>
+        <button class="btn" id="btn-export" type="button">Criar pastas no Finder</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-avatar" id="panel-avatar"></div>
+      <div class="panel-titles">
+        <p class="panel-name" id="panel-name" contenteditable="true" spellcheck="false"></p>
+        <p class="panel-sub" id="panel-sub"></p>
+      </div>
+      <button class="panel-close" id="panel-close" type="button" aria-label="Fechar">✕</button>
+    </div>
+    <div class="panel-actions">
+      <button class="btn" type="button" id="panel-rename-hint" disabled>Clique no nome para renomear</button>
+      <button class="btn warn" type="button" id="panel-merge" style="display:none;"></button>
+    </div>
+    <div class="panel-grid" id="panel-grid"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-new-event">
+  <div class="panel" style="width:min(440px,100%);">
+    <div class="panel-head">
+      <div class="panel-titles">
+        <p class="panel-name" style="cursor:default;">Novo evento</p>
+        <p class="panel-sub">Aponte a pasta de fotos deste evento</p>
+      </div>
+      <button class="panel-close" id="new-event-close" type="button" aria-label="Fechar">✕</button>
+    </div>
+    <div class="new-event-body">
+      <label class="field-label" for="new-event-label">Nome do evento</label>
+      <input class="field-input" id="new-event-label" type="text" placeholder="Ex: Casamento Ana &amp; Rafael">
+
+      <label class="field-label" for="new-event-path">Pasta das fotos</label>
+      <div class="path-row">
+        <input class="field-input" id="new-event-path" type="text" placeholder="/Users/.../Fotos/Evento">
+        <button class="btn" id="new-event-pick" type="button">Selecionar…</button>
+      </div>
+      <p class="field-hint" id="new-event-error"></p>
+
+      <button class="btn-primary" id="new-event-create" type="button" style="width:100%;margin-top:6px;">Adicionar e começar a analisar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>

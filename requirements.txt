@@ -1,0 +1,9 @@
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+insightface>=1.0.1
+onnxruntime>=1.20
+opencv-python>=4.10
+scikit-learn>=1.5
+numpy>=1.26,<2
+pillow>=11.0
+python-multipart==0.0.20
