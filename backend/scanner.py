@@ -8,6 +8,7 @@ photos anywhere.
 from pathlib import Path
 
 from . import db, face_engine
+from .exporter import EXPORT_FOLDER_NAME
 
 SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"}
 
@@ -15,7 +16,11 @@ SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"}
 def find_photos(folder_path):
     root = Path(folder_path)
     return sorted(
-        p for p in root.rglob("*") if p.is_file() and p.suffix.lower() in SUPPORTED_EXTENSIONS
+        p
+        for p in root.rglob("*")
+        if p.is_file()
+        and p.suffix.lower() in SUPPORTED_EXTENSIONS
+        and EXPORT_FOLDER_NAME not in p.relative_to(root).parts
     )
 
 

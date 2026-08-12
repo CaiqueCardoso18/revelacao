@@ -10,6 +10,12 @@ from pathlib import Path
 
 from . import db
 
+# The default export destination sits inside the event's own source folder
+# (photographers want the result right next to the originals). scanner.py
+# skips anything under a folder with this exact name so a later re-scan
+# never re-ingests these copies as if they were new source photos.
+EXPORT_FOLDER_NAME = "Organizado por pessoa"
+
 SAFE_CHARS = "-_ áéíóúàâêôãõçÁÉÍÓÚÀÂÊÔÃÕÇ"
 
 
