@@ -43,7 +43,9 @@
         }
         if (!res.ok) {
           var msg = data ? detailToMessage(data.detail, res.statusText) : (raw || res.statusText);
-          throw new Error(msg || "Erro desconhecido (" + res.status + ")");
+          var err = new Error(msg || "Erro desconhecido (" + res.status + ")");
+          err.status = res.status;
+          throw err;
         }
         return data;
       });
@@ -63,6 +65,29 @@
     toast.classList.add("show");
     clearTimeout(toast._t);
     toast._t = setTimeout(function () { toast.classList.remove("show"); }, 3200);
+  }
+
+  function renderEmptyState(title, sub, showAddButton) {
+    document.getElementById("empty-state").style.display = "";
+    document.getElementById("event-content").style.display = "none";
+    document.querySelector("#empty-state .empty-title").textContent = title;
+    document.querySelector("#empty-state .empty-sub").textContent = sub;
+    document.getElementById("btn-empty-add").style.display = showAddButton ? "" : "none";
+  }
+
+  // Only relevant when this page is served by the hub (not local standalone
+  // mode) -- a 503 here specifically means "no local agent is connected for
+  // this account", which needs a different message than "no events yet".
+  function handleLoadError(err) {
+    if (err && err.status === 503) {
+      renderEmptyState(
+        "Seu computador não está conectado",
+        "Abra o revelação na máquina onde estão as fotos pra ver seus eventos aqui.",
+        false
+      );
+      return;
+    }
+    showToast((err && err.message) || "Erro ao carregar.");
   }
 
   // ---- events list / switcher ----
@@ -105,15 +130,18 @@
     localStorage.setItem("revelacao_active_event", id);
     document.getElementById("event-menu").classList.remove("open");
     document.getElementById("event-switch").setAttribute("aria-expanded", "false");
-    refreshActive();
+    refreshActive().catch(handleLoadError);
   }
 
   // ---- active event rendering ----
 
   function refreshActive() {
     if (!state.activeId) {
-      document.getElementById("empty-state").style.display = "";
-      document.getElementById("event-content").style.display = "none";
+      renderEmptyState(
+        "Nenhum evento ainda",
+        "Adicione a pasta de fotos de um evento (casamento, formatura, espetáculo...) para começar.",
+        true
+      );
       document.getElementById("event-switch-name").textContent = "Nenhum evento ainda";
       document.getElementById("event-switch-dot").style.background = "var(--text-faint)";
       document.getElementById("topbar-path").textContent = "";
@@ -251,8 +279,8 @@
   function startPolling() {
     if (state.pollTimer) return;
     state.pollTimer = setInterval(function () {
-      loadEventsList();
-      refreshActive();
+      loadEventsList().catch(handleLoadError);
+      refreshActive().catch(handleLoadError);
     }, 1600);
   }
 
@@ -469,5 +497,30 @@
     }
   });
 
-  loadEventsList().then(refreshActive);
+  document.getElementById("btn-logout").addEventListener("click", function () {
+    api("/api/auth/logout", { method: "POST" }).finally(function () {
+      window.location.href = "/login.html";
+    });
+  });
+
+  function init() {
+    loadEventsList().then(refreshActive).catch(handleLoadError);
+  }
+
+  // /api/auth/me only exists when this page is served by the hub (not the
+  // local standalone server at 127.0.0.1:8420, which has no auth routes at
+  // all -- that request 404s there, and local usage should proceed exactly
+  // as before). 401 means hub mode but not logged in; 200 means logged in.
+  fetch("/api/auth/me", { credentials: "same-origin" })
+    .then(function (res) {
+      if (res.status === 401) {
+        window.location.href = "/login.html";
+        return;
+      }
+      if (res.ok) {
+        document.getElementById("btn-logout").style.display = "";
+      }
+      init();
+    })
+    .catch(init);
 })();

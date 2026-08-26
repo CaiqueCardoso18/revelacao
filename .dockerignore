@@ -1,0 +1,14 @@
+.git/
+.venv/
+__pycache__/
+*.pyc
+data/
+*.log
+ENSAIO 1/
+hub/.env
+hub/backend/
+hub/Caddyfile
+hub/docker-compose.yml
+hub/frontend/Dockerfile
+hub/backend/Dockerfile
+backend/

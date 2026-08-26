@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Criar conta — revelação</title>
-<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/auth-styles.css">
 </head>
 <body>
 <div>
@@ -35,7 +35,7 @@
       return Promise.reject(new Error("As senhas não são iguais."));
     }
     return postJSON("/api/auth/signup", { email: fd.get("email"), password: fd.get("password") })
-      .then(function () { window.location.href = "/account.html"; });
+      .then(function () { window.location.href = "/"; });
   });
 </script>
 </body>

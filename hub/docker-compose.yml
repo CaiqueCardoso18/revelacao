@@ -28,7 +28,9 @@ services:
         condition: service_healthy
 
   frontend:
-    build: ./frontend
+    build:
+      context: ..
+      dockerfile: hub/frontend/Dockerfile
     restart: unless-stopped
 
   caddy:
