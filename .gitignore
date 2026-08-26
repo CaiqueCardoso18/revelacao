@@ -4,3 +4,4 @@ __pycache__/
 data/
 *.log
 hub/.env
+run_hidden.vbs

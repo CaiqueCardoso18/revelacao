@@ -357,11 +357,24 @@ app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 if __name__ == "__main__":
     import asyncio
+    import sys
     import threading
 
     import uvicorn
 
     from . import agent_client
+
+    if sys.stdout is None or sys.stderr is None:
+        # Launched with no console (pythonw.exe, or a hidden/background
+        # launcher on any OS) -- sys.stdout/stderr are None in that case, so
+        # the very first print() or log line (including uvicorn's own
+        # startup logging) would crash with AttributeError. Give it
+        # somewhere real to write instead.
+        log_path = Path(__file__).resolve().parent.parent / "data" / "agent.log"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_file = open(log_path, "a", buffering=1, encoding="utf-8")
+        sys.stdout = log_file
+        sys.stderr = log_file
 
     # Never blocks startup: with a saved token it just connects; with none,
     # it opens a browser tab for a one-click confirmation and keeps polling
