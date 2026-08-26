@@ -23,19 +23,23 @@
       <div class="msg" id="signup-msg"></div>
     </form>
     <div class="links">
-      <a href="/login.html">Já tenho conta</a>
+      <a id="login-link" href="/login.html">Já tenho conta</a>
       <span></span>
     </div>
   </div>
 </div>
 <script src="/auth.js"></script>
 <script>
+  var nextUrl = getSafeNext();
+  if (nextUrl !== "/") {
+    document.getElementById("login-link").href = "/login.html?next=" + encodeURIComponent(nextUrl);
+  }
   wireForm("signup-form", "signup-msg", function (fd) {
     if (fd.get("password") !== fd.get("password2")) {
       return Promise.reject(new Error("As senhas não são iguais."));
     }
     return postJSON("/api/auth/signup", { email: fd.get("email"), password: fd.get("password") })
-      .then(function () { window.location.href = "/"; });
+      .then(function () { window.location.href = nextUrl; });
   });
 </script>
 </body>

@@ -23,6 +23,14 @@ function showMsg(el, text, kind) {
   el.className = "msg " + kind;
 }
 
+function getSafeNext() {
+  var next = new URLSearchParams(window.location.search).get("next");
+  // Only ever redirect to a local path -- reject protocol-relative ("//evil.com")
+  // or absolute URLs so this can't be turned into an open redirect.
+  if (next && next.startsWith("/") && !next.startsWith("//")) return next;
+  return "/";
+}
+
 function wireForm(formId, msgId, submit) {
   var form = document.getElementById(formId);
   var msg = document.getElementById(msgId);

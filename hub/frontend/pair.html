@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conectar computador — revelação</title>
+<link rel="stylesheet" href="/auth-styles.css">
+</head>
+<body>
+<div>
+  <div class="wordmark">revela<span class="dot">·</span>ção</div>
+  <div class="card">
+    <h1 id="title">Conectar este computador</h1>
+    <p class="sub" id="sub">Isso deixa suas fotos nesta máquina visíveis pra sua conta, sem enviar nenhuma foto pra fora dela.</p>
+
+    <button class="primary" id="btn-confirm" type="button">Confirmar</button>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+<script src="/auth.js"></script>
+<script>
+  var code = new URLSearchParams(window.location.search).get("code");
+  var btn = document.getElementById("btn-confirm");
+  var msg = document.getElementById("msg");
+
+  if (!code) {
+    document.getElementById("sub").textContent = "Link inválido — falta o código.";
+    btn.style.display = "none";
+  }
+
+  fetch("/api/auth/me", { credentials: "same-origin" }).then(function (res) {
+    if (res.status === 401) {
+      window.location.href = "/login.html?next=" + encodeURIComponent(window.location.pathname + window.location.search);
+    }
+  });
+
+  btn.addEventListener("click", function () {
+    btn.disabled = true;
+    postJSON("/api/device/approve", { code: code })
+      .then(function () {
+        document.getElementById("title").textContent = "Conectado";
+        document.getElementById("sub").textContent = "Pode voltar pro terminal — o revelação já percebeu sozinho.";
+        btn.style.display = "none";
+      })
+      .catch(function (err) {
+        showMsg(msg, err.message, "error");
+        btn.disabled = false;
+      });
+  });
+</script>
+</body>
+</html>

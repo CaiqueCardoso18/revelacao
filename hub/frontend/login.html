@@ -22,15 +22,19 @@
     </form>
     <div class="links">
       <a href="/forgot-password.html">Esqueci minha senha</a>
-      <a href="/signup.html">Criar conta</a>
+      <a id="signup-link" href="/signup.html">Criar conta</a>
     </div>
   </div>
 </div>
 <script src="/auth.js"></script>
 <script>
+  var nextUrl = getSafeNext();
+  if (nextUrl !== "/") {
+    document.getElementById("signup-link").href = "/signup.html?next=" + encodeURIComponent(nextUrl);
+  }
   wireForm("login-form", "login-msg", function (fd) {
     return postJSON("/api/auth/login", { email: fd.get("email"), password: fd.get("password") })
-      .then(function () { window.location.href = "/"; });
+      .then(function () { window.location.href = nextUrl; });
   });
 </script>
 </body>

@@ -17,6 +17,7 @@ import asyncio
 import base64
 import logging
 import os
+import webbrowser
 from pathlib import Path
 
 import httpx
@@ -33,6 +34,13 @@ HUB_URL = os.environ.get("HUB_URL", "ws://95.216.170.49/agent/connect")
 
 _RECONNECT_MIN = 2
 _RECONNECT_MAX = 30
+
+DEVICE_POLL_INTERVAL = 3  # seconds
+DEVICE_POLL_TIMEOUT = 600  # seconds -- matches the hub's DEVICE_CODE_TTL
+
+
+def _http_base(ws_url):
+    return ws_url.replace("wss://", "https://").replace("ws://", "http://").split("/agent/connect")[0]
 
 
 def read_pairing_token():
@@ -73,6 +81,57 @@ async def _dispatch(msg, client: httpx.AsyncClient):
         }
 
 
+async def start_device_pairing(hub_url=None):
+    """Zero-typing pairing: opens a browser tab, waits for one click there.
+
+    Never blocks the caller for long and never raises -- if the hub is
+    unreachable (no internet, hub down) this just logs and returns None so
+    the app keeps working fully offline, exactly as it always could.
+    """
+    http_base = _http_base(hub_url or HUB_URL)
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        try:
+            resp = await client.post(http_base + "/api/device/start")
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception:
+            logger.info("agent: hub indisponível agora -- seguindo só localmente")
+            return None
+
+        device_code = data["device_code"]
+        verification_url = data["verification_url"]
+
+        print()
+        print("Pra acessar suas fotos de qualquer navegador (opcional), confirme na")
+        print("aba que vai abrir agora. Pode fechar essa aba pra usar só localmente.")
+        print(f"Se não abrir sozinho: {verification_url}")
+        print()
+        try:
+            webbrowser.open(verification_url)
+        except Exception:
+            pass
+
+        deadline = asyncio.get_event_loop().time() + DEVICE_POLL_TIMEOUT
+        while asyncio.get_event_loop().time() < deadline:
+            await asyncio.sleep(DEVICE_POLL_INTERVAL)
+            try:
+                resp = await client.get(http_base + "/api/device/poll", params={"code": device_code})
+            except Exception:
+                continue
+            if resp.status_code != 200:
+                continue
+            result = resp.json()
+            if result.get("status") == "approved":
+                token = result["agent_token"]
+                save_pairing_token(token)
+                print("Conectado! Suas fotos já podem ser vistas de qualquer navegador.\n")
+                return token
+
+    logger.info("agent: pareamento não confirmado a tempo -- seguindo só localmente")
+    return None
+
+
 async def run_agent(token=None, hub_url=None):
     """Keeps a connection to the hub alive, reconnecting with backoff."""
     token = token or read_pairing_token()
@@ -110,6 +169,17 @@ async def run_agent(token=None, hub_url=None):
             delay = min(delay * 2, _RECONNECT_MAX)
 
 
+async def bootstrap_and_run(hub_url=None):
+    """The one call run.command/run.bat make: use a saved token, or try the
+    zero-typing pairing flow once, then stay connected if either worked --
+    otherwise do nothing further (local-only use is always valid)."""
+    token = read_pairing_token()
+    if not token:
+        token = await start_device_pairing(hub_url=hub_url)
+    if token:
+        await run_agent(token=token, hub_url=hub_url)
+
+
 def _json(obj):
     import json
 
@@ -124,4 +194,4 @@ def _loads(raw):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    asyncio.run(run_agent())
+    asyncio.run(bootstrap_and_run())
