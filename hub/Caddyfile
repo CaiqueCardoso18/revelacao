@@ -1,0 +1,17 @@
+{
+	# Sem domínio ainda -- assim que houver um (ex: revelacao.seudominio.com),
+	# troque ":80" abaixo pelo domínio e o Caddy emite HTTPS sozinho.
+	auto_https off
+}
+
+:80 {
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+	handle /healthz {
+		reverse_proxy backend:8000
+	}
+	handle {
+		reverse_proxy frontend:80
+	}
+}

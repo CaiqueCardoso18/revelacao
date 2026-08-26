@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Criar conta — revelação</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div>
+  <div class="wordmark">revela<span class="dot">·</span>ção</div>
+  <div class="card">
+    <h1>Criar conta</h1>
+    <p class="sub">Leva menos de um minuto.</p>
+    <form id="signup-form">
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" required autocomplete="email">
+      <label for="password">Senha</label>
+      <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password">
+      <label for="password2">Confirmar senha</label>
+      <input id="password2" name="password2" type="password" required minlength="8" autocomplete="new-password">
+      <button class="primary" type="submit">Criar conta</button>
+      <div class="msg" id="signup-msg"></div>
+    </form>
+    <div class="links">
+      <a href="/login.html">Já tenho conta</a>
+      <span></span>
+    </div>
+  </div>
+</div>
+<script src="/auth.js"></script>
+<script>
+  wireForm("signup-form", "signup-msg", function (fd) {
+    if (fd.get("password") !== fd.get("password2")) {
+      return Promise.reject(new Error("As senhas não são iguais."));
+    }
+    return postJSON("/api/auth/signup", { email: fd.get("email"), password: fd.get("password") })
+      .then(function () { window.location.href = "/account.html"; });
+  });
+</script>
+</body>
+</html>
