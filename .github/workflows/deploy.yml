@@ -30,5 +30,10 @@ jobs:
             cd hub
             export GIT_COMMIT=$(git -C .. rev-parse --short HEAD)
             docker compose up -d --build
+            # Caddy mounts the Caddyfile read-only from disk -- compose does
+            # not consider that a "changed config" that warrants a restart,
+            # so a Caddyfile-only edit would silently never take effect
+            # without forcing this every deploy.
+            docker compose restart caddy
             docker image prune -f
           '
