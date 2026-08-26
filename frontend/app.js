@@ -503,6 +503,15 @@
     });
   });
 
+  document.getElementById("btn-pair").addEventListener("click", function () {
+    api("/api/pairing-tokens", { method: "POST" }).then(function (res) {
+      window.prompt(
+        "Cole este código no terminal do computador com as fotos (ele pede na primeira vez que você abrir o revelação lá):",
+        res.token
+      );
+    }).catch(function (err) { showToast(err.message); });
+  });
+
   function init() {
     loadEventsList().then(refreshActive).catch(handleLoadError);
   }
@@ -519,6 +528,7 @@
       }
       if (res.ok) {
         document.getElementById("btn-logout").style.display = "";
+        document.getElementById("btn-pair").style.display = "";
       }
       init();
     })

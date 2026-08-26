@@ -355,7 +355,45 @@ def _event_detail(conn, event):
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 
+def _prompt_for_pairing_token():
+    """Interactive, once -- only asked when no token is saved yet.
+
+    Skippable on purpose (hit Enter): local-only usage without a hub account
+    must keep working exactly as it always has, unchanged.
+    """
+    print()
+    print("Opcional: conectar este computador ao revelação hospedado, pra abrir")
+    print("suas fotos de qualquer navegador. Gere um código em \"Parear")
+    print("computador\" no site (é preciso já estar logado lá) e cole abaixo.")
+    print("Ou aperte Enter pra pular e usar só localmente.")
+    print()
+    try:
+        entered = input("Código de pareamento: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        entered = ""
+    return entered or None
+
+
 if __name__ == "__main__":
+    import threading
+
     import uvicorn
+
+    from . import agent_client
+
+    token = agent_client.read_pairing_token()
+    if not token:
+        token = _prompt_for_pairing_token()
+        if token:
+            agent_client.save_pairing_token(token)
+
+    if token:
+        def _run_agent_loop():
+            import asyncio
+
+            asyncio.run(agent_client.run_agent(token=token))
+
+        threading.Thread(target=_run_agent_loop, daemon=True).start()
+        print("Conectando ao revelação hospedado em segundo plano...")
 
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8420)
