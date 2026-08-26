@@ -11,6 +11,7 @@ from . import auth
 from .db import get_db, init_db
 from .email import send_email
 from .models import PasswordResetToken, User
+from . import relay
 
 RESET_TOKEN_TTL = timedelta(hours=1)
 
@@ -160,3 +161,9 @@ def reset_password(body: ResetPasswordBody, db: Session = Depends(get_db)):
     token.used = True
     db.commit()
     return {"ok": True}
+
+
+# Registered last -- its catch-all /api/{path:path} must not shadow the
+# specific /api/auth/* routes above, and FastAPI/Starlette matches routes in
+# the order they were added.
+app.include_router(relay.router)
