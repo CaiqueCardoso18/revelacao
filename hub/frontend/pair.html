@@ -43,8 +43,12 @@
         btn.style.display = "none";
       })
       .catch(function (err) {
-        showMsg(msg, err.message, "error");
-        btn.disabled = false;
+        showMsg(
+          msg,
+          "Esse link expirou ou já foi usado. Feche esta aba e abra o revelação de novo na sua máquina para gerar um novo.",
+          "error"
+        );
+        btn.style.display = "none";
       });
   });
 </script>

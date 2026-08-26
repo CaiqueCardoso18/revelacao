@@ -36,7 +36,7 @@ _RECONNECT_MIN = 2
 _RECONNECT_MAX = 30
 
 DEVICE_POLL_INTERVAL = 3  # seconds
-DEVICE_POLL_TIMEOUT = 600  # seconds -- matches the hub's DEVICE_CODE_TTL
+DEVICE_POLL_TIMEOUT = 3600  # seconds -- matches the hub's DEVICE_CODE_TTL
 
 
 def _http_base(ws_url):

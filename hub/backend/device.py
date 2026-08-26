@@ -22,7 +22,8 @@ from .models import AgentToken, User
 
 router = APIRouter()
 
-DEVICE_CODE_TTL = 600  # seconds
+DEVICE_CODE_TTL = 3600  # seconds -- generous: a first-time user may need to
+# read the page, create an account, then come back and click confirm
 
 # code -> {"created_at": float, "approved": bool, "agent_token": str | None}
 _device_codes: dict[str, dict] = {}
