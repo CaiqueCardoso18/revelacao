@@ -102,11 +102,11 @@ async def start_device_pairing(hub_url=None):
         device_code = data["device_code"]
         verification_url = data["verification_url"]
 
-        print()
-        print("Pra acessar suas fotos de qualquer navegador (opcional), confirme na")
-        print("aba que vai abrir agora. Pode fechar essa aba pra usar só localmente.")
-        print(f"Se não abrir sozinho: {verification_url}")
-        print()
+        print(flush=True)
+        print("Pra acessar suas fotos de qualquer navegador (opcional), confirme na", flush=True)
+        print("aba que vai abrir agora. Pode fechar essa aba pra usar só localmente.", flush=True)
+        print(f"Se não abrir sozinho: {verification_url}", flush=True)
+        print(flush=True)
         try:
             webbrowser.open(verification_url)
         except Exception:
@@ -125,7 +125,7 @@ async def start_device_pairing(hub_url=None):
             if result.get("status") == "approved":
                 token = result["agent_token"]
                 save_pairing_token(token)
-                print("Conectado! Suas fotos já podem ser vistas de qualquer navegador.\n")
+                print("Conectado! Suas fotos já podem ser vistas de qualquer navegador.\n", flush=True)
                 return token
 
     logger.info("agent: pareamento não confirmado a tempo -- seguindo só localmente")
