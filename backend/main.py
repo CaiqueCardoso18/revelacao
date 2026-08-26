@@ -27,6 +27,17 @@ FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 _active_scans = set()
 
 
+@app.exception_handler(Exception)
+async def _json_error_handler(request, exc):
+    # Starlette's default handler for an unhandled exception returns plain
+    # text ("Internal Server Error"), which the frontend can't res.json() --
+    # in Safari that surfaces as a cryptic "The string did not match the
+    # expected pattern" instead of any useful message. Always return JSON.
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(status_code=500, content={"detail": str(exc) or exc.__class__.__name__})
+
+
 # ---- schemas ----
 
 

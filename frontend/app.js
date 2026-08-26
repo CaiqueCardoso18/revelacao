@@ -18,13 +18,35 @@
     currentPanelPerson: null,
   };
 
+  function detailToMessage(detail, fallback) {
+    if (!detail) return fallback;
+    if (typeof detail === "string") return detail;
+    // FastAPI validation errors are an array of {msg, loc, ...} objects.
+    if (Array.isArray(detail)) {
+      return detail.map(function (d) { return d && d.msg ? d.msg : JSON.stringify(d); }).join("; ");
+    }
+    return fallback;
+  }
+
   function api(path, opts) {
     opts = opts || {};
     opts.headers = { "Content-Type": "application/json" };
     if (opts.body) opts.body = JSON.stringify(opts.body);
     return fetch(path, opts).then(function (res) {
-      if (!res.ok) return res.json().then(function (e) { throw new Error(e.detail || res.statusText); });
-      return res.json();
+      // Read as text first -- an unexpected non-JSON response (a proxy error
+      // page, a plain-text 500, etc.) must not blow up in res.json() itself,
+      // which in Safari throws an opaque "did not match expected pattern".
+      return res.text().then(function (raw) {
+        var data = null;
+        if (raw) {
+          try { data = JSON.parse(raw); } catch (parseErr) { data = null; }
+        }
+        if (!res.ok) {
+          var msg = data ? detailToMessage(data.detail, res.statusText) : (raw || res.statusText);
+          throw new Error(msg || "Erro desconhecido (" + res.status + ")");
+        }
+        return data;
+      });
     });
   }
 

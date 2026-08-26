@@ -259,6 +259,14 @@ def merge_people(conn, source_id, target_id):
     conn.execute(
         "UPDATE faces SET person_id = ? WHERE person_id = ?", (target_id, source_id)
     )
+    # Some other, even-smaller fragment may already be suggested to merge
+    # into `source_id` (a chain: X -> source_id -> target_id). Re-point it at
+    # the new home instead of leaving a dangling reference, which would
+    # otherwise fail the foreign-key check on the delete below.
+    conn.execute(
+        "UPDATE people SET merge_suggestion_for = ? WHERE merge_suggestion_for = ?",
+        (target_id, source_id),
+    )
     conn.execute("DELETE FROM people WHERE id = ?", (source_id,))
     conn.commit()
 
