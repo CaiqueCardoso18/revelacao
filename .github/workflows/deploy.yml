@@ -1,0 +1,33 @@
+name: Deploy hub
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "hub/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "95.216.170.49 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKHMHmooKtoHDG+BhIWuqfntpdaHQicD2iDnFM/LhYZ2" > ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" '
+            set -e
+            cd ~/revelacao
+            git fetch origin master
+            git reset --hard origin/master
+            cd hub
+            docker compose up -d --build
+            docker image prune -f
+          '
