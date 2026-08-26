@@ -22,6 +22,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      GIT_COMMIT: ${GIT_COMMIT:-unknown}
     depends_on:
       postgres:
         condition: service_healthy

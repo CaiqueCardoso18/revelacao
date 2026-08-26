@@ -31,7 +31,7 @@ async def _json_error_handler(request, exc):
 
 @app.get("/healthz")
 def healthz():
-    return {"ok": True}
+    return {"ok": True, "git_commit": os.environ.get("GIT_COMMIT", "unknown")}
 
 
 # ---- schemas ----
